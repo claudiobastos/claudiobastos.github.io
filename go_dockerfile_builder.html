@@ -1,0 +1,74 @@
+<!doctype html>
+<html>
+  <head>
+    <title>Build your Distroless Go Image Dockerfile</title>
+    <style>
+      body, html {
+        background-color: #E3E3E3;
+        font: normal normal normal 1em Arial, sans-serif;
+      }
+      label {
+        display: block;
+        font-weight: bold;
+      }
+      #content {
+        background-color: #F8F8F8;
+        border-radius: 10px;
+        padding: 30px;
+        margin: 50px auto;
+        width: 700px;
+      }
+      textarea {
+        width: 99%;
+      }
+    </style>
+    <!-- Check new versions at https://developers.google.com/speed/libraries/#jquery -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+    <script>
+      $(function(){
+        $('input').bind('keyup', function(){
+          
+          var package = $('[name=package]').val();
+
+          $("[name=dockerfile]").val(
+            "# First Stage: Building the application\n" +
+"FROM golang:1.10 as build\n" +
+"\n" +
+"ADD . /go/src/" + package + " \n" +
+"#ADD . /go/src/<more_packages_if_you_need> \n" +
+"COPY . /go/src/" + package + " \n" +
+"WORKDIR /go/src/" + package + " \n" +
+"\n" +
+"RUN go get -d -v ./...\n" +
+"RUN go install -v " + package + " \n" +
+//#"RUN go install -v ./...\n"+
+"\n" +
+"# Second Stage: Copy it into our base image. \n" +
+"FROM gcr.io/distroless/base \n" +
+"COPY --from=build /go/bin/" + package + " /app \n" +
+//"#CMD [\"/app\"] \n" +
+"ENTRYPOINT [\"/app\"] \n"
+
+          );
+        });
+        $('[name=image]').bind('keyup', function() {
+          $('[name=database]').trigger('keyup');
+        });
+        var chars = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXTZabcdefghiklmnopqrstuvwxyz";
+        var pass = '';
+        for (var i=0; i < 30; i++) {
+          var rnum = Math.floor(Math.random() * chars.length);
+          pass += chars.substring(rnum, rnum+1);
+        }
+        $("[name=package]").focus();
+      });
+    </script>
+  </head>
+  <body>
+    <div id="content">
+      <label for="package">Your Package</label><input name="package" value="" placeholder="github.com/user/repo" size="40" />
+      <label for="dockerfile">Dockerfile</label>
+      <textarea name="dockerfile" rows="30" cols="100"></textarea>
+    </div>
+  </body>
+</html>
